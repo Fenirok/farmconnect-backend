@@ -12,7 +12,8 @@ git commit -m "MESSAGE"
 git push origin feature		(Sends your branch to GitHub)  
 
 
-hamba hamba ramba ramba
-tamba tamba
+Hamba Hamba Ramba Ramba  
+
+
 
 
