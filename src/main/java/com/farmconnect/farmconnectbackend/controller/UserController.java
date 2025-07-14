@@ -2,6 +2,7 @@ package com.farmconnect.farmconnectbackend.controller;
 
 import com.farmconnect.farmconnectbackend.model.User;
 import com.farmconnect.farmconnectbackend.repository.UserRepository;
+import com.farmconnect.farmconnectbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,25 +18,13 @@ import java.util.Optional;
 public class UserController {
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private UserService userService;
 
     // Registration endpoint
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request, BindingResult result) {
-        if (result.hasErrors()) {
-            String errors = result.getAllErrors().stream()
-                .map(e -> e.getDefaultMessage())
-                .collect(Collectors.joining(", "));
-            return ResponseEntity.badRequest().body(errors);
-        }
-        if (userRepository.findByPhone(request.getPhone()).isPresent()) {
-            return ResponseEntity.badRequest().body("User with this phone already exists");
-        }
-        User user = new User();
-        user.setName(request.getName());
-        user.setPhone(request.getPhone());
-        user.setRole(request.getRole());
-        user = userRepository.save(user);
-        return ResponseEntity.ok(user);
+        return userService.register(request, result);
     }
 
     // Login endpoint

@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.validation.BindingResult;
 import java.util.stream.Collectors;
+import com.farmconnect.farmconnectbackend.service.FarmerService;
 
 @RestController
 @RequestMapping("/api/farmer")
@@ -24,47 +25,12 @@ public class FarmerController {
     private UserRepository userRepository;
     @Autowired
     private ConsumerProfileRepository consumerProfileRepository;
+    @Autowired
+    private FarmerService farmerService;
 
     @PostMapping("/profile")
     public ResponseEntity<?> completeFarmerProfile(@Valid @RequestBody FarmerProfileRequest request, BindingResult result) {
-        if (result.hasErrors()) {
-            String errors = result.getAllErrors().stream()
-                .map(e -> e.getDefaultMessage())
-                .collect(Collectors.joining(", "));
-            return ResponseEntity.badRequest().body(errors);
-        }
-        Optional<User> userOpt = userRepository.findById(request.getUserId());
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("User not found");
-        }
-        User user = userOpt.get();
-        // Only allow users with FARMER role
-        if (user.getRole() != User.Role.FARMER) {
-            return ResponseEntity.status(403).body("Only users with FARMER role can create a farmer profile.");
-        }
-        // Prevent a user from having both profiles
-        if (farmerProfileRepository.findByUser(user).isPresent()) {
-            return ResponseEntity.badRequest().body("Farmer profile already exists for this user.");
-        }
-        if (consumerProfileRepository.findByUser(user).isPresent()) {
-            return ResponseEntity.badRequest().body("User already has a consumer profile. Cannot create both profiles.");
-        }
-        FarmerProfile profile = new FarmerProfile();
-        profile.setUser(user);
-        profile.setAadharNo(request.getAadharNo());
-        if (request.getKisanId() != null && !request.getKisanId().isEmpty()) {
-            profile.setKisanId(request.getKisanId());
-        }
-        if (request.getPanNo() != null && !request.getPanNo().isEmpty()) {
-            profile.setPanNo(request.getPanNo());
-        }
-        profile.setState(request.getState());
-        profile.setCity(request.getCity());
-        profile.setAddress(request.getAddress());
-        profile.setPincode(request.getPincode());
-        profile.setFarmLocation(request.getFarmLocation());
-        farmerProfileRepository.save(profile);
-        return ResponseEntity.ok(profile);
+        return farmerService.completeFarmerProfile(request, result);
     }
 
     @GetMapping("/profile")

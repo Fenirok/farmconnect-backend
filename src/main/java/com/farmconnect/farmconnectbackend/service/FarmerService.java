@@ -1,11 +1,11 @@
 package com.farmconnect.farmconnectbackend.service;
 
-import com.farmconnect.farmconnectbackend.model.ConsumerProfile;
+import com.farmconnect.farmconnectbackend.model.FarmerProfile;
 import com.farmconnect.farmconnectbackend.model.User;
-import com.farmconnect.farmconnectbackend.repository.ConsumerProfileRepository;
 import com.farmconnect.farmconnectbackend.repository.FarmerProfileRepository;
+import com.farmconnect.farmconnectbackend.repository.ConsumerProfileRepository;
 import com.farmconnect.farmconnectbackend.repository.UserRepository;
-import com.farmconnect.farmconnectbackend.controller.ConsumerController.ConsumerProfileRequest;
+import com.farmconnect.farmconnectbackend.controller.FarmerController.FarmerProfileRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -14,15 +14,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class ConsumerService {
-    @Autowired
-    private ConsumerProfileRepository consumerProfileRepository;
+public class FarmerService {
     @Autowired
     private FarmerProfileRepository farmerProfileRepository;
     @Autowired
+    private ConsumerProfileRepository consumerProfileRepository;
+    @Autowired
     private UserRepository userRepository;
 
-    public ResponseEntity<?> completeConsumerProfile(ConsumerProfileRequest request, BindingResult result) {
+    public ResponseEntity<?> completeFarmerProfile(FarmerProfileRequest request, BindingResult result) {
         if (result.hasErrors()) {
             String errors = result.getAllErrors().stream()
                 .map(e -> e.getDefaultMessage())
@@ -34,20 +34,23 @@ public class ConsumerService {
             return ResponseEntity.badRequest().body("User not found");
         }
         User user = userOpt.get();
-        // Only allow users with CONSUMER role
-        if (user.getRole() != User.Role.CONSUMER) {
-            return ResponseEntity.status(403).body("Only users with CONSUMER role can create a consumer profile.");
+        // Only allow users with FARMER role
+        if (user.getRole() != User.Role.FARMER) {
+            return ResponseEntity.status(403).body("Only users with FARMER role can create a farmer profile.");
         }
         // Prevent a user from having both profiles
-        if (consumerProfileRepository.findByUser(user).isPresent()) {
-            return ResponseEntity.badRequest().body("Consumer profile already exists for this user.");
-        }
         if (farmerProfileRepository.findByUser(user).isPresent()) {
-            return ResponseEntity.badRequest().body("User already has a farmer profile. Cannot create both profiles.");
+            return ResponseEntity.badRequest().body("Farmer profile already exists for this user.");
         }
-        ConsumerProfile profile = new ConsumerProfile();
+        if (consumerProfileRepository.findByUser(user).isPresent()) {
+            return ResponseEntity.badRequest().body("User already has a consumer profile. Cannot create both profiles.");
+        }
+        FarmerProfile profile = new FarmerProfile();
         profile.setUser(user);
         profile.setAadharNo(request.getAadharNo());
+        if (request.getKisanId() != null && !request.getKisanId().isEmpty()) {
+            profile.setKisanId(request.getKisanId());
+        }
         if (request.getPanNo() != null && !request.getPanNo().isEmpty()) {
             profile.setPanNo(request.getPanNo());
         }
@@ -55,11 +58,8 @@ public class ConsumerService {
         profile.setCity(request.getCity());
         profile.setAddress(request.getAddress());
         profile.setPincode(request.getPincode());
-        profile.setNearbyLandmark(request.getNearbyLandmark());
-        if (request.getPreferences() != null && !request.getPreferences().isEmpty()) {
-            profile.setPreferences(request.getPreferences());
-        }
-        consumerProfileRepository.save(profile);
+        profile.setFarmLocation(request.getFarmLocation());
+        farmerProfileRepository.save(profile);
         return ResponseEntity.ok(profile);
     }
-}
+} 
