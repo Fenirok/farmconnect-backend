@@ -1,4 +1,4 @@
-package com.farmconnect.farmconnect_backend;
+package com.farmconnect.farmconnectbackend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,9 +10,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableJpaRepositories("com.farmconnect.farmconnectbackend.repository")
 public class FarmconnectBackendApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(FarmconnectBackendApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(FarmconnectBackendApplication.class, args);
+    }
 
-	//helloooooo 
+    //helloooooo 
 }
