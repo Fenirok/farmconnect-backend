@@ -40,7 +40,7 @@ public class Product {
     private Long farmerId;
 
     @Column(name = "farm_name")
-    private String farmerName;
+    private String farmName;
 
     private double weight;
 
