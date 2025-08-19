@@ -1,10 +1,13 @@
 package com.farmconnect.farmconnectbackend.controller;
 
 import java.util.List;
-
+import java.util.Map;
+import com.cloudinary.utils.ObjectUtils;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.dao.EmptyResultDataAccessException;
-
+import com.cloudinary.Cloudinary;
 import com.farmconnect.farmconnectbackend.model.Product;
 import com.farmconnect.farmconnectbackend.service.ProductService;
 
@@ -24,6 +27,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getAllProducts() {
@@ -39,22 +45,29 @@ public class ProductController {
         return new ResponseEntity<>(prod, HttpStatus.OK);
     }
 
+    /*
     @GetMapping("/farmers/{farmerId}/products")
     public ResponseEntity<List<Product>> getProductsByFarmer(@PathVariable Long farmerId) {
         List<Product> products = productService.getProductsByFarmerId(farmerId);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
-
-    @PostMapping("/farmers/products/add/{farmerId}") /* /products/add/{farmerId} */
-    public ResponseEntity<Product> addProduct(@PathVariable Long farmerId, @RequestBody Product product) {
+    */
+    
+    @PostMapping("/farmers/{farmerId}/products")
+    public ResponseEntity<Product> addProduct(
+        @PathVariable Long farmerId,
+        @RequestBody Product product
+    ) {
         try {
             product.setFarmerId(farmerId);
             Product saved = productService.addProduct(product);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+
 
     @PatchMapping("/products/update/{productId}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long productId, @RequestBody Product product) {
