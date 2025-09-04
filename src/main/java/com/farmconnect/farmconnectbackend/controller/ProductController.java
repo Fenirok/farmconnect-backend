@@ -20,6 +20,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import com.cloudinary.Cloudinary;
 import com.farmconnect.farmconnectbackend.model.Product;
 import com.farmconnect.farmconnectbackend.service.ProductService;
+import com.farmconnect.farmconnectbackend.dto.ProductValidationResponse;
+import org.springframework.web.client.RestTemplate;
 
 @RestController
 @RequestMapping("/api")
@@ -65,6 +67,67 @@ public class ProductController {
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+    
+    @PostMapping("/farmers/{farmerId}/products/validate")
+    public ResponseEntity<ProductValidationResponse> addProductWithImageValidation(
+        @PathVariable Long farmerId,
+        @RequestParam("name") String name,
+        @RequestParam("description") String description,
+        @RequestParam("price") double price,
+        @RequestParam("category") String category,
+        @RequestParam("farmName") String farmName,
+        @RequestParam("weight") double weight,
+        @RequestParam("unit") String unit,
+        @RequestParam("isOrganic") boolean isOrganic,
+        @RequestParam("location") String location,
+        @RequestParam("image") MultipartFile image
+    ) {
+        try {
+            // Create product object
+            Product product = new Product();
+            product.setFarmerId(farmerId);
+            product.setName(name);
+            product.setDescription(description);
+            product.setPrice(price);
+            product.setCategory(category);
+            product.setFarmName(farmName);
+            product.setWeight(weight);
+            product.setUnit(unit);
+            product.setOrganic(isOrganic);
+            product.setLocation(location);
+            
+            // Process with AI validation
+            ProductValidationResponse response = productService.addProductWithImageValidation(product, image);
+            
+            if (response.isSuccess()) {
+                return new ResponseEntity<>(response, HttpStatus.CREATED);
+            } else {
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            ProductValidationResponse errorResponse = new ProductValidationResponse();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage("Error processing request: " + e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    @GetMapping("/ai-service/health")
+    public ResponseEntity<String> checkAIServiceHealth() {
+        try {
+            // Make actual health check to AI microservice
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.getForEntity(
+                "http://localhost:8000/health", 
+                String.class
+            );
+            return new ResponseEntity<>("AI Service is healthy: " + response.getBody(), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("AI Service not available: " + e.getMessage(), HttpStatus.SERVICE_UNAVAILABLE);
         }
     }
 

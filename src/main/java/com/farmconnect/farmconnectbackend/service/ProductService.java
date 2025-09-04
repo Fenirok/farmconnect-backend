@@ -4,15 +4,20 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.farmconnect.farmconnectbackend.model.Product;
 import com.farmconnect.farmconnectbackend.repository.ProductRepository;
+import com.farmconnect.farmconnectbackend.dto.ProductValidationResponse;
 
 @Service
 public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+    
+    @Autowired
+    private AIMicroserviceService aiMicroserviceService;
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
@@ -25,6 +30,60 @@ public class ProductService {
 
     public Product addProduct(Product product) {
         return productRepository.save(product);
+    }
+    
+    public ProductValidationResponse addProductWithImageValidation(Product product, MultipartFile imageFile) {
+        ProductValidationResponse response = new ProductValidationResponse();
+        
+        try {
+            // Validate image with AI microservice
+            AIMicroserviceService.AIValidationResponse aiResponse = 
+                aiMicroserviceService.validateProductImage(product.getName(), imageFile);
+            
+            if (aiResponse.isAccepted()) {
+                // AI validation passed, save the product
+                Product savedProduct = productRepository.save(product);
+                
+                response.setSuccess(true);
+                response.setMessage("Product added successfully");
+                response.setProduct(savedProduct);
+                
+                // Add AI validation details
+                ProductValidationResponse.AIValidationDetails aiDetails = new ProductValidationResponse.AIValidationDetails();
+                aiDetails.setAccepted(true);
+                aiDetails.setReason(aiResponse.getReason());
+                
+                // Convert YOLO results
+                List<ProductValidationResponse.YOLOResult> yoloResults = new java.util.ArrayList<>();
+                for (AIMicroserviceService.YOLOResult yolo : aiResponse.getYoloResults()) {
+                    ProductValidationResponse.YOLOResult result = new ProductValidationResponse.YOLOResult();
+                    result.setLabel(yolo.getLabel());
+                    result.setConfidence(yolo.getConfidence());
+                    yoloResults.add(result);
+                }
+                aiDetails.setYoloResults(yoloResults);
+                response.setAiValidation(aiDetails);
+                
+            } else {
+                // AI validation failed
+                response.setSuccess(false);
+                response.setMessage("Image validation failed: " + aiResponse.getReason());
+                response.setProduct(null);
+                
+                // Add AI validation details
+                ProductValidationResponse.AIValidationDetails aiDetails = new ProductValidationResponse.AIValidationDetails();
+                aiDetails.setAccepted(false);
+                aiDetails.setReason(aiResponse.getReason());
+                response.setAiValidation(aiDetails);
+            }
+            
+        } catch (Exception e) {
+            response.setSuccess(false);
+            response.setMessage("Error processing product: " + e.getMessage());
+            response.setProduct(null);
+        }
+        
+        return response;
     }
 
     public List<Product> getProductsByFarmerId(Long farmerId) {
