@@ -1,4 +1,5 @@
 package com.farmconnect.farmconnectbackend.service;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -101,16 +102,34 @@ public class ProductService {
         }
         Product existingProduct = optionalProduct.get();
         // Update only fields that are provided (not null or not default)
-        if (updatedProduct.getName() != null) existingProduct.setName(updatedProduct.getName());
-        if (updatedProduct.getDescription() != null) existingProduct.setDescription(updatedProduct.getDescription());
-        if (updatedProduct.getPrice() != 0) existingProduct.setPrice(updatedProduct.getPrice());
-        if (updatedProduct.getImageUrl() != null) existingProduct.setImageUrl(updatedProduct.getImageUrl());
-        if (updatedProduct.getCategory() != null) existingProduct.setCategory(updatedProduct.getCategory());
-        if (updatedProduct.getFarmName() != null) existingProduct.setFarmName(updatedProduct.getFarmName());
-        if (updatedProduct.getWeight() != 0) existingProduct.setWeight(updatedProduct.getWeight());
-        if (updatedProduct.getUnit() != null) existingProduct.setUnit(updatedProduct.getUnit());
+        if (updatedProduct.getName() != null) {
+            existingProduct.setName(updatedProduct.getName());
+        }
+        if (updatedProduct.getDescription() != null) {
+            existingProduct.setDescription(updatedProduct.getDescription());
+        }
+        if (updatedProduct.getPrice() != 0) {
+            existingProduct.setPrice(updatedProduct.getPrice());
+        }
+        if (updatedProduct.getImageUrl() != null) {
+            existingProduct.setImageUrl(updatedProduct.getImageUrl());
+        }
+        if (updatedProduct.getCategory() != null) {
+            existingProduct.setCategory(updatedProduct.getCategory());
+        }
+        if (updatedProduct.getFarmName() != null) {
+            existingProduct.setFarmName(updatedProduct.getFarmName());
+        }
+        if (updatedProduct.getWeight() != 0) {
+            existingProduct.setWeight(updatedProduct.getWeight());
+        }
+        if (updatedProduct.getUnit() != null) {
+            existingProduct.setUnit(updatedProduct.getUnit());
+        }
         existingProduct.setOrganic(updatedProduct.isOrganic());
-        if (updatedProduct.getLocation() != null) existingProduct.setLocation(updatedProduct.getLocation());
+        if (updatedProduct.getLocation() != null) {
+            existingProduct.setLocation(updatedProduct.getLocation());
+        }
         return productRepository.save(existingProduct);
     }
 }
